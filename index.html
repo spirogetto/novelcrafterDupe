@@ -1,18 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Chatbot</title>
+    <style>
+        :root {
+            --bg: #f4f7f6;
+            --user-blue: #007bff;
+            --bot-gray: #e9e9eb;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        
+        #chat-window { width: 400px; height: 500px; background: white; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
+        
+        #messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        
+        .msg { max-width: 80%; padding: 10px 15px; border-radius: 18px; font-size: 14px; line-height: 1.4; }
+        .user { align-self: flex-end; background: var(--user-blue); color: white; border-bottom-right-radius: 2px; }
+        .bot { align-self: flex-start; background: var(--bot-gray); color: #333; border-bottom-left-radius: 2px; }
+        .loading { font-style: italic; color: #888; font-size: 12px; }
+
+        #input-area { padding: 15px; border-top: 1px solid #eee; display: flex; }
+        input { flex: 1; border: 1px solid #ddd; padding: 10px; border-radius: 20px; outline: none; transition: border 0.3s; }
+        input:focus { border-color: var(--user-blue); }
+    </style>
+</head>
+<body>
+
+<div id="chat-window">
+    <div id="messages"></div>
+    <div id="input-area">
+        <input type="text" id="userInput" placeholder="Ask me anything..." onkeypress="handleChat(event)">
+    </div>
+</div>
+
+<script>
 async function handleChat(e) {
     if (e.key === 'Enter' && e.target.value.trim() !== '') {
         const input = document.getElementById('userInput');
         const messagesDiv = document.getElementById('messages');
         const userText = input.value;
 
-        // 1. Display User Message
-        messagesDiv.innerHTML += `<div class="user-msg"><b>You:</b> ${userText}</div>`;
-        input.value = ''; // Clear input immediately
+        // Display User Message
+        messagesDiv.innerHTML += `<div class="msg user">${userText}</div>`;
+        input.value = ''; 
         
-        // 2. Add a temporary "Loading" indicator
         const loadingId = "loading-" + Date.now();
-        messagesDiv.innerHTML += `<div id="${loadingId}" class="bot-msg"><i>AI is thinking...</i></div>`;
-        
-        // Auto-scroll to bottom
+        messagesDiv.innerHTML += `<div id="${loadingId}" class="msg bot loading">AI is thinking...</div>`;
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
         try {
@@ -20,19 +55,18 @@ async function handleChat(e) {
                 method: 'POST',
                 body: JSON.stringify({ message: userText })
             });
-            
             const data = await response.json();
             
-            // 3. Remove loading indicator and show actual reply
             document.getElementById(loadingId).remove();
-            messagesDiv.innerHTML += `<div class="bot-msg"><b>AI:</b> ${data.reply}</div>`;
-            
+            // Using innerText for security, or innerHTML if you trust the AI output
+            messagesDiv.innerHTML += `<div class="msg bot">${data.reply}</div>`;
         } catch (err) {
             document.getElementById(loadingId).remove();
-            messagesDiv.innerHTML += `<div class="error"><b>Error:</b> Could not reach the AI.</div>`;
+            messagesDiv.innerHTML += `<div class="msg bot" style="color:red">Error reaching AI.</div>`;
         }
-
-        // Final Auto-scroll
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 }
+</script>
+</body>
+</html>
