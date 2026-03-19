@@ -1,21 +1,38 @@
 async function handleChat(e) {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && e.target.value.trim() !== '') {
         const input = document.getElementById('userInput');
         const messagesDiv = document.getElementById('messages');
         const userText = input.value;
 
-        messagesDiv.innerHTML += `<p><b>You:</b> ${userText}</p>`;
-        input.value = '';
+        // 1. Display User Message
+        messagesDiv.innerHTML += `<div class="user-msg"><b>You:</b> ${userText}</div>`;
+        input.value = ''; // Clear input immediately
+        
+        // 2. Add a temporary "Loading" indicator
+        const loadingId = "loading-" + Date.now();
+        messagesDiv.innerHTML += `<div id="${loadingId}" class="bot-msg"><i>AI is thinking...</i></div>`;
+        
+        // Auto-scroll to bottom
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
         try {
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 body: JSON.stringify({ message: userText })
             });
+            
             const data = await response.json();
-            messagesDiv.innerHTML += `<p><b>AI:</b> ${data.reply}</p>`;
+            
+            // 3. Remove loading indicator and show actual reply
+            document.getElementById(loadingId).remove();
+            messagesDiv.innerHTML += `<div class="bot-msg"><b>AI:</b> ${data.reply}</div>`;
+            
         } catch (err) {
-            messagesDiv.innerHTML += `<p style="color:red;">Error: Could not reach the AI.</p>`;
+            document.getElementById(loadingId).remove();
+            messagesDiv.innerHTML += `<div class="error"><b>Error:</b> Could not reach the AI.</div>`;
         }
+
+        // Final Auto-scroll
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 }
