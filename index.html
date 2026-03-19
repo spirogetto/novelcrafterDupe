@@ -1,0 +1,21 @@
+async function handleChat(e) {
+    if (e.key === 'Enter') {
+        const input = document.getElementById('userInput');
+        const messagesDiv = document.getElementById('messages');
+        const userText = input.value;
+
+        messagesDiv.innerHTML += `<p><b>You:</b> ${userText}</p>`;
+        input.value = '';
+
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                body: JSON.stringify({ message: userText })
+            });
+            const data = await response.json();
+            messagesDiv.innerHTML += `<p><b>AI:</b> ${data.reply}</p>`;
+        } catch (err) {
+            messagesDiv.innerHTML += `<p style="color:red;">Error: Could not reach the AI.</p>`;
+        }
+    }
+}
